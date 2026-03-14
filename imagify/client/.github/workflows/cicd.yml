@@ -1,0 +1,30 @@
+name: Deploy Node Application
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v2
+      - name: Login to Docker hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build Docker Image
+        run: docker build -t harshmhatre28/text-to-image-generator-ai-saas-web-appnodejs-app  .
+      - name: Publish Docker Image to docker hub
+        run: docker push harshmhatre28/text-to-image-generator-ai-saas-web-appnodejs-app:latest 
+
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Pull image from docker Hub
+        run: docker pull harshmhatre28/text-to-image-generator-ai-saas-web-appnodejs-app:latest
+      - name: Delete old container 
+        run: docker rm -f text-to-image-generator-ai-saas-web-appnodejs-app-container 
+      - name: Run Docker container
+        run: docker run -d -p 4000:4000 --name text-to-image-generator-ai-saas-web-appnodejs-app-container -e MONGO_PASSWORD='${{ secrets.MONGO_PASSWORD }}''  harshmhatre28/text-to-image-generator-ai-saas-web-appnodejs-app
